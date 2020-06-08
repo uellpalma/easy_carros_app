@@ -44,7 +44,7 @@ export default function Route({ navigation }) {
       try {
         userToken = await AsyncStorage.getItem('userToken@EasyCarros')
       } catch(error) {
-        console.log(error)
+        dispatch({ type: 'LOGOUT', token: userToken })
       }
 
       dispatch({ type: 'REFRESH_TOKEN', token: userToken })
@@ -57,13 +57,22 @@ export default function Route({ navigation }) {
     signIn: async data => {
       dispatch({ type: 'LOGIN', token: 'token_qualquer' })
     },
-    signOut: () => dispatch({ type: 'LOGOUT', })
+    signOut: () => dispatch({ type: 'LOGOUT' })
   }), [])
 
   return(
     <AuthContext.Provider value={authContext}>
       <NavigationContainer>
-        <Stack.Navigator>
+        <Stack.Navigator 
+          screenOptions={{
+            headerShown: false,
+            stackAnimation: 'default',
+            stackPresentation: 'transparentModal',
+            contentStyle: {
+              backgroundColor: "#FFF"
+            }
+          }}
+        >
           {state.userToken == null ? (
             <Stack.Screen name="Login" component={LoginScreen} />
           ) : (
