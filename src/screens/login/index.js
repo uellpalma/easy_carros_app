@@ -1,4 +1,4 @@
-import React, { useContext, useRef } from 'react'
+import React, { useContext } from 'react'
 import {
   View,
   Alert,
@@ -26,7 +26,6 @@ const LoginSchema = Yup.object().shape({
 
 export default function LoginScreen() {
   const { signIn } = useContext(AuthContext)
-  const inputPass = useRef(null)
 
   return(
     <View style={styles.container}>
@@ -62,7 +61,6 @@ export default function LoginScreen() {
                 value={values.pass}
                 secureTextEntry={true}
                 maxLength={100}
-                ref={inputPass}
                 underlineColor="#DDD"
                 onChangeText={handleChange('pass')}
                 onBlur={handleBlur('pass')}

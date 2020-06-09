@@ -3,6 +3,10 @@
 
 **Easy Carros** é a solução para acabar com burocracias na vida de quem possui um veículo, digitalizando todas a tarefas necessários na vida do carro. Como manutenção, serviços,  gestão de multas, documentos, financiamento e até a venda do seminovo.
 
+![Tela de login](_screens_/screen.png)
+![Lista Vazia](_screens_/screen4.png)
+![Adicionar Veículo](_screens_/screen3.png)
+![Veículos](_screens_/screen2.png)
 
 ### Instalação
 
