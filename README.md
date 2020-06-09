@@ -6,8 +6,6 @@
 ![Tela de login](_screens/screen.png)
 ![Lista Vazia](_screens/screen4.png)
 ![Adicionar Veículo](_screens/screen3.png)
-![Veículos](_screens/screen2.png)
-
 ### Instalação
 
 Necessário ter node, yarn e Android Studio instalados na sua máquina.
