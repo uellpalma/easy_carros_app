@@ -3,18 +3,13 @@ import React, {
   useEffect,
   useMemo
 } from 'react'
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  Image
-} from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import AsyncStorage from '@react-native-community/async-storage'
 import LoginScreen from '../screens/login'
 import VehiclesScreen from '../screens/vehicles'
 import { AuthContext } from '../services/AuthContext'
+import SplachScreen from '../components/splashScreen'
 
 const Stack = createStackNavigator();
 
@@ -58,7 +53,7 @@ export default function Route({ navigation }) {
       }
       setTimeout(() => {
         dispatch({ type: 'REFRESH_TOKEN', token: userToken })
-      }, 10000)
+      }, 1000)
     }
 
     reloadToken()
@@ -72,19 +67,8 @@ export default function Route({ navigation }) {
   }), [])
 
   if (state.isLoading) {
-    // We haven't finished checking for the token yet
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF' }}>
-        <Image
-          style={{
-            width: 200,
-            height: 150,
-          }}
-          source={require('../resources/img/logo.png')}
-        />
-
-        <Text style={{ fontSize: 15, color: '#666', position: 'absolute', bottom: 20 }}>Aquecendo os motores...</Text>
-      </View>
+      <SplachScreen/>
     );
   }
 

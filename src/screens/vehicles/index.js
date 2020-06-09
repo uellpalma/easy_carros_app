@@ -22,6 +22,10 @@ import { AuthContext } from '../../services/AuthContext'
 import * as Yup from 'yup'
 import api from '../../services/api'
 
+import Header from '../../components/header'
+import Vehicle from '../../components/vehicles'
+import InputGroup from '../../components/inputGroup'
+
 const CarSchema = Yup.object().shape({
   plate: Yup.string()
     .min(7, 'Placa invalida')
@@ -47,42 +51,13 @@ export default function VehiclesScreen() {
     <View style={styles.container}>
       <StatusBar backgroundColor="#48bfdd" barStyle="dark-content" />
 
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Veículos</Text>
-
-        <Button 
-          icon="exit-to-app"
-          style={{ elevation: 0, borderRadius: 50 }}
-          theme={{ colors: { primary: 'rgba(0, 0, 0, .1)' } }}
-          mode="contained"
-          onPress={() => logout()}
-        >
-          Sair
-        </Button>
-      </View>
+      <Header title="Veículos" logout={logout} />
 
       <ScrollView>
         <View style={{ padding: 15, paddingBottom: 80 }}>
         {
           vehicles.map((obj, index) => (
-            <View style={styles.vehicleCard} key={index}>
-              <Image 
-                style={styles.vehicleCardImage} 
-                source={require('../../resources/img/carro.png')}
-              />
-              <View style={styles.vehicleCardText}>
-                <Text style={{ fontSize: 15, color: '#999' }}>Placa</Text>
-                <Text style={{ fontSize: 20, fontWeight: '700', color: 'rgba(0,0,0,.6)' }}>{obj.plate}</Text>
-              </View>
-
-              <IconButton
-                style={{ position: 'absolute', right: 0}}
-                icon="delete"
-                color="#999"
-                size={20}
-                onPress={() => confirmDeleteVehicle(obj)}
-              />
-            </View>
+            <Vehicle plate={obj.plate} onDelete={() => confirmDeleteVehicle(obj)} key={index}/>
           ))
         }
         </View>
@@ -114,27 +89,19 @@ export default function VehiclesScreen() {
                 <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Adicionar Veículo</Text>
               </View>
 
-              <View style={{ marginBottom: 15 }}>
-                <TextInput
-                  label='Placa'
-                  value={values.plate}
-                  mode="outlined"
-                  maxLength={7}
-                  autoCapitalize="characters"
-                  style={{ borderRadius: 50 }}
-                  onChangeText={handleChange('plate')}
-                  onBlur={handleBlur('plate')}
-                  theme={{ colors: { primary: '#48bfdd' } }}
-                  error={errors.plate && touched.plate}
-                />
+              <InputGroup
+                label="Placa"
+                maxLength={7}
+                autoCapitalize="characters"
+                mode="outlined"
+                onChangeText={handleChange('plate')}
+                onBlur={handleBlur('plate')}
+                theme={{ colors: { primary: '#48bfdd' } }}
+                error={errors.plate && touched.plate}
+                errorMessage={errors.plate}
+              />
 
-                {errors.plate && touched.plate ? (
-                  <HelperText type="error">{errors.plate}</HelperText>
-                ) : null}
-              </View>
-
-
-              <View style={{ marginTop: 10, flexDirection: 'row', justifyContent: 'space-between' }}>
+              <View style={styles.footerModal}>
                 <Button
                   contentStyle={{ paddingHorizontal: 6 }}
                   style={{ elevation: 0, borderRadius: 50 }}
@@ -236,18 +203,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    padding: 15,
-    paddingVertical: 30,
-    backgroundColor: '#48bfdd',
-    flexDirection: 'row',
-    justifyContent: 'space-between'
-  },
-  headerTitle: {
-    fontSize: 25,
-    color: '#FFF',
-    fontWeight: 'bold'
-  },
   fab: {
     position: 'absolute',
     elevation: 0,
@@ -268,20 +223,9 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10
   },
-
-  vehicleCard: {
+  footerModal: { 
+    marginTop: 10,
     flexDirection: 'row',
-    backgroundColor: '#ededed',
-    paddingVertical: 15,
-    paddingHorizontal: 10,
-    marginBottom: 10,
-    borderRadius: 5
-  },
-  vehicleCardImage: {
-    width: 100,
-    height: 51
-  },
-  vehicleCardText: {
-    marginLeft: 15
+    justifyContent: 'space-between'
   }
 })

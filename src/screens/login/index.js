@@ -1,23 +1,19 @@
-import React, { useContext } from 'react'
+import React, { useContext, useRef } from 'react'
 import {
   View,
-  Text,
   Alert,
   SafeAreaView,
   StatusBar,
-  Image,
   StyleSheet
 } from 'react-native'
-import { 
-  TextInput,
-  Button,
-  HelperText
-} from 'react-native-paper'
+import { Button } from 'react-native-paper'
 import { AuthContext } from '../../services/AuthContext'
 import AsyncStorage from '@react-native-community/async-storage'
 import { Formik } from 'formik'
 import * as Yup from 'yup'
 import api from '../../services/api'
+import Logo from '../../components/logo'
+import InputGroup from '../../components/inputGroup'
 
 const LoginSchema = Yup.object().shape({
   email: Yup.string()
@@ -30,60 +26,49 @@ const LoginSchema = Yup.object().shape({
 
 export default function LoginScreen() {
   const { signIn } = useContext(AuthContext)
+  const inputPass = useRef(null)
 
   return(
     <View style={styles.container}>
       <StatusBar backgroundColor="#FFF" barStyle="dark-content" />
       <SafeAreaView>
         <View style={styles.contentLogin}>
-          <View style={styles.contentLogo}>
-            <Image
-              style={styles.logo}
-              source={require('../../resources/img/logo.png')}
-            />
-          </View>
+          <Logo />
 
           <Formik
             initialValues={{ email: '', pass: '' }}
             validationSchema={LoginSchema}
-            onSubmit={values => login(values)}
+            enableReinitialize={true}
+            onSubmit={login}
           >
           {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
             <View style={styles.contentForm}>
-              <View style={styles.contentInput}>
-                <TextInput
-                  label='Email'
-                  mode="outlined"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  value={values.email}
-                  onChangeText={handleChange('email')}
-                  onBlur={handleBlur('email')}
-                  theme={{ colors: { primary: '#48bfdd' } }}
-                  error={errors.email && touched.email}
-                />
-                {errors.email && touched.email ? (
-                  <HelperText type="error">{errors.email}</HelperText>
-                ) : null}
-              </View>
+              <InputGroup
+                label='Email'
+                mode="flat"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={values.email}
+                onChangeText={handleChange('email')}
+                onBlur={handleBlur('email')}
+                underlineColor="#DDD"
+                error={errors.email && touched.email}
+                errorMessage={errors.email}
+              />
 
-              <View style={styles.contentInput}>
-                <TextInput
-                  label='Senha'
-                  mode="outlined"
-                  value={values.pass}
-                  secureTextEntry={true}
-                  maxLength={100}
-                  onChangeText={() => {}}
-                  theme={{ colors: { primary: '#48bfdd' } }}
-                  onChangeText={handleChange('pass')}
-                  onBlur={handleBlur('pass')}
-                  error={errors.pass && touched.pass}
-                />
-                {errors.pass && touched.pass ? (
-                  <HelperText type="error">{errors.pass}</HelperText>
-                ) : null}
-              </View>
+              <InputGroup
+                label='Senha'
+                mode="flat"
+                value={values.pass}
+                secureTextEntry={true}
+                maxLength={100}
+                ref={inputPass}
+                underlineColor="#DDD"
+                onChangeText={handleChange('pass')}
+                onBlur={handleBlur('pass')}
+                error={errors.pass && touched.pass}
+                errorMessage={errors.pass}
+              />
 
               <Button
                 contentStyle={{ paddingVertical: 6 }}
@@ -103,10 +88,10 @@ export default function LoginScreen() {
     </View>
   )
 
-  function login({ email, pass }) {
+  function login(values, { setFieldValue }) {
     api.post('auth', {
-      email,
-      password: pass 
+      email: values.email,
+      password: values.pass 
     })
     .then(resp => {
       let data = resp.data.data
@@ -115,9 +100,9 @@ export default function LoginScreen() {
     .catch(error => {
       Alert.alert(
         "Ops!",
-        "Sua senha ou email podem está incorretos!",
+        "Sua senha ou email está incorreto!",
         [
-          { text: "Tentar novamente", onPress: () => console.log("OK Pressed") }
+          { text: "Tentar novamente", onPress: () => setFieldValue('pass', '') }
         ],
         { cancelable: false }
       );
@@ -144,20 +129,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 20
   },
-  contentLogo: {
-    alignItems: 'center'
-  },
-  logo: { 
-    width: 200,
-    height: 150,
-    marginBottom: 50
-  },
   contentInput: {
     marginBottom: 10
   },
   button: {
     elevation: 0,
     marginTop: 20,
-    borderRadius: 50
   }
 })
