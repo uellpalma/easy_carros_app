@@ -2,6 +2,7 @@ import React, { useContext } from 'react'
 import {
   View,
   Text,
+  Alert,
   SafeAreaView,
   StatusBar,
   Image,
@@ -13,8 +14,10 @@ import {
   HelperText
 } from 'react-native-paper'
 import { AuthContext } from '../../services/AuthContext'
+import AsyncStorage from '@react-native-community/async-storage'
 import { Formik } from 'formik'
 import * as Yup from 'yup'
+import api from '../../services/api'
 
 const LoginSchema = Yup.object().shape({
   email: Yup.string()
@@ -43,7 +46,7 @@ export default function LoginScreen() {
           <Formik
             initialValues={{ email: '', pass: '' }}
             validationSchema={LoginSchema}
-            onSubmit={values => signIn()}
+            onSubmit={values => login(values)}
           >
           {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
             <View style={styles.contentForm}>
@@ -51,7 +54,6 @@ export default function LoginScreen() {
                 <TextInput
                   label='Email'
                   mode="outlined"
-                  autoFocus
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={values.email}
@@ -100,6 +102,37 @@ export default function LoginScreen() {
       </SafeAreaView>
     </View>
   )
+
+  function login({ email, pass }) {
+    api.post('auth', {
+      email,
+      password: pass 
+    })
+    .then(resp => {
+      let data = resp.data.data
+      setTokenStorage(data.token)
+    })
+    .catch(error => {
+      Alert.alert(
+        "Ops!",
+        "Sua senha ou email podem está incorretos!",
+        [
+          { text: "Tentar novamente", onPress: () => console.log("OK Pressed") }
+        ],
+        { cancelable: false }
+      );
+    })
+  }
+
+  async function setTokenStorage(token) {
+    try {
+      await AsyncStorage.setItem('@userToken&EasyCarrosApp', token)
+
+      signIn({ token })
+    } catch (error) {
+      alert(error)
+    }
+  }
 }
 
 const styles = StyleSheet.create({

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import {
   View,
   Text,
@@ -6,7 +6,8 @@ import {
   StatusBar,
   ScrollView,
   Image,
-  Modal
+  Modal,
+  Alert
 } from 'react-native'
 import { 
   FAB,
@@ -16,22 +17,31 @@ import {
   IconButton
 } from 'react-native-paper'
 import { Formik } from 'formik'
+import AsyncStorage from '@react-native-community/async-storage'
+import { AuthContext } from '../../services/AuthContext'
 import * as Yup from 'yup'
+import api from '../../services/api'
 
 const CarSchema = Yup.object().shape({
-  car: Yup.string(),
-  number: Yup.string()
+  plate: Yup.string()
     .min(7, 'Placa invalida')
     .test(
       'is-alphanumber',
-      'Alfanumérico apenas',
+      'Insira apenas caracteres alfanumérico.',
       value => !(/[^a-zA-Z0-9]/.test( value )),
     )
     .required('Digite a placa')
 });
 
 export default function VehiclesScreen() {
+  const { signOut } = useContext(AuthContext)
+
   const [modal, setModal] = useState(false)
+  const [vehicles, setVehicles] = useState([])
+
+  useEffect(() => {
+    loadVehicles()
+  }, [])
   
   return(
     <View style={styles.container}>
@@ -39,26 +49,42 @@ export default function VehiclesScreen() {
 
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Veículos</Text>
+
+        <Button 
+          icon="exit-to-app"
+          style={{ elevation: 0, borderRadius: 50 }}
+          theme={{ colors: { primary: 'rgba(0, 0, 0, .1)' } }}
+          mode="contained"
+          onPress={() => logout()}
+        >
+          Sair
+        </Button>
       </View>
 
-      <ScrollView style={{ padding: 15}}>
-        <View style={styles.vehicleCard}>
-          <Image 
-            style={styles.vehicleCardImage} 
-            source={require('../../resources/img/carro.png')}
-          />
-          <View style={styles.vehicleCardText}>
-            <Text style={{ fontSize: 15, color: '#999' }}>Onix LT</Text>
-            <Text style={{ fontSize: 20, fontWeight: '700', color: 'rgba(0,0,0,.6)' }}>PLACA89</Text>
-          </View>
+      <ScrollView>
+        <View style={{ padding: 15, paddingBottom: 80 }}>
+        {
+          vehicles.map((obj, index) => (
+            <View style={styles.vehicleCard} key={index}>
+              <Image 
+                style={styles.vehicleCardImage} 
+                source={require('../../resources/img/carro.png')}
+              />
+              <View style={styles.vehicleCardText}>
+                <Text style={{ fontSize: 15, color: '#999' }}>Placa</Text>
+                <Text style={{ fontSize: 20, fontWeight: '700', color: 'rgba(0,0,0,.6)' }}>{obj.plate}</Text>
+              </View>
 
-          <IconButton
-            style={{ position: 'absolute', right: 0}}
-            icon="dots-vertical"
-            color="#999"
-            size={20}
-            onPress={() => console.log('Pressed')}
-          />
+              <IconButton
+                style={{ position: 'absolute', right: 0}}
+                icon="delete"
+                color="#999"
+                size={20}
+                onPress={() => confirmDeleteVehicle(obj)}
+              />
+            </View>
+          ))
+        }
         </View>
       </ScrollView>
 
@@ -78,47 +104,32 @@ export default function VehiclesScreen() {
       >
         <View style={styles.modalContent}>
           <Formik
-            initialValues={{ car: '', number: '' }}
+            initialValues={{ plate: '' }}
             validationSchema={CarSchema}
-            onSubmit={values => signIn()}
+            onSubmit={values => submitVehicles(values)}
           >
           {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
             <View style={styles.modalBox}>
               <View style={{ marginBottom: 15 }}>
                 <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Adicionar Veículo</Text>
               </View>
-              
-              <View style={{ marginBottom: 15 }}>
-                <TextInput
-                  label='Carro'
-                  value={values.car}
-                  mode="outlined"
-                  onChangeText={handleChange('car')}
-                  onBlur={handleBlur('car')}
-                  theme={{ colors: { primary: '#48bfdd' } }}
-                  error={errors.car && touched.car}
-                />
-                {errors.car && touched.car ? (
-                  <HelperText type="error">{errors.car}</HelperText>
-                ) : null}
-              </View>
 
               <View style={{ marginBottom: 15 }}>
                 <TextInput
                   label='Placa'
-                  value={values.number}
+                  value={values.plate}
                   mode="outlined"
                   maxLength={7}
                   autoCapitalize="characters"
                   style={{ borderRadius: 50 }}
-                  onChangeText={handleChange('number')}
-                  onBlur={handleBlur('number')}
+                  onChangeText={handleChange('plate')}
+                  onBlur={handleBlur('plate')}
                   theme={{ colors: { primary: '#48bfdd' } }}
-                  error={errors.number && touched.number}
+                  error={errors.plate && touched.plate}
                 />
 
-                {errors.number && touched.number ? (
-                  <HelperText type="error">{errors.number}</HelperText>
+                {errors.plate && touched.plate ? (
+                  <HelperText type="error">{errors.plate}</HelperText>
                 ) : null}
               </View>
 
@@ -139,7 +150,7 @@ export default function VehiclesScreen() {
                   mode="contained"
                   dark={true}
                   theme={{ colors: { text: '#000', primary: '#48bfdd' } }}
-                  onPress={() => signIn()}
+                  onPress={handleSubmit}
                 >
                   Salvar
                 </Button>
@@ -151,6 +162,74 @@ export default function VehiclesScreen() {
       </Modal>
     </View>
   )
+
+  function submitVehicles({ plate }) {
+    api.post('vehicle', { plate })
+    .then(resp => {
+      loadVehicles()
+      setModal(false)
+    })
+    .catch(error => {
+      console.log(error)
+    })
+  }
+
+  function loadVehicles() {
+    api.get('vehicle')
+    .then(resp => {
+      setVehicles(resp.data.data)
+    })
+    .catch(error => {
+      console.log(error)
+    })
+  }
+
+  function logout() {
+    Alert.alert(
+      "Sair",
+      "Deseja sair da sua conta?",
+      [
+        {
+          text: "Não",
+          onPress: () => console.log("Cancel Logout"),
+          style: "cancel"
+        },
+        { text: "Sim", onPress: () => destroyToken() }
+      ],
+      { cancelable: false }
+    );
+  }
+
+  async function destroyToken() {
+    try {
+      await AsyncStorage.removeItem('@userToken&EasyCarrosApp')
+
+      signOut()
+    } catch (error) {
+      alert(error)
+    }
+  }
+
+  function confirmDeleteVehicle({ id, plate }) {
+    Alert.alert(
+      'Excluir',
+      `Deseja excluir o veículo de placa '${plate}'`,
+      [
+        {
+          text: 'Cancelar',
+          onPress: () => console.log("Cancel Delete"),
+          style: "cancel"
+        },
+        { text: "Sim, Excluir", onPress: () => deleteVehicle(id) }
+      ]
+    )
+  }
+
+  function deleteVehicle(id) {
+    api.delete(`/vehicle/${id}`)
+    .then(() => loadVehicles())
+    .catch(error => alert(error))
+  }
 }
 
 const styles = StyleSheet.create({
@@ -160,7 +239,9 @@ const styles = StyleSheet.create({
   header: {
     padding: 15,
     paddingVertical: 30,
-    backgroundColor: '#48bfdd'
+    backgroundColor: '#48bfdd',
+    flexDirection: 'row',
+    justifyContent: 'space-between'
   },
   headerTitle: {
     fontSize: 25,
@@ -193,6 +274,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ededed',
     paddingVertical: 15,
     paddingHorizontal: 10,
+    marginBottom: 10,
     borderRadius: 5
   },
   vehicleCardImage: {

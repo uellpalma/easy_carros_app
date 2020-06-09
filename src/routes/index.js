@@ -1,4 +1,14 @@
-import React, { useReducer, useEffect, useMemo } from 'react'
+import React, { 
+  useReducer,
+  useEffect,
+  useMemo
+} from 'react'
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  Image
+} from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import AsyncStorage from '@react-native-community/async-storage'
@@ -42,23 +52,41 @@ export default function Route({ navigation }) {
       let userToken;
 
       try {
-        userToken = await AsyncStorage.getItem('userToken@EasyCarros')
+        userToken = await AsyncStorage.getItem('@userToken&EasyCarrosApp')
       } catch(error) {
-        dispatch({ type: 'LOGOUT', token: userToken })
+        dispatch({ type: 'LOGOUT' })
       }
-
-      dispatch({ type: 'REFRESH_TOKEN', token: userToken })
+      setTimeout(() => {
+        dispatch({ type: 'REFRESH_TOKEN', token: userToken })
+      }, 10000)
     }
 
     reloadToken()
   }, [])
 
   const authContext = useMemo(() => ({
-    signIn: async data => {
-      dispatch({ type: 'LOGIN', token: 'token_qualquer' })
+    signIn: async ({ token }) => {
+      dispatch({ type: 'LOGIN', token: token })
     },
     signOut: () => dispatch({ type: 'LOGOUT' })
   }), [])
+
+  if (state.isLoading) {
+    // We haven't finished checking for the token yet
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF' }}>
+        <Image
+          style={{
+            width: 200,
+            height: 150,
+          }}
+          source={require('../resources/img/logo.png')}
+        />
+
+        <Text style={{ fontSize: 15, color: '#666', position: 'absolute', bottom: 20 }}>Aquecendo os motores...</Text>
+      </View>
+    );
+  }
 
   return(
     <AuthContext.Provider value={authContext}>
