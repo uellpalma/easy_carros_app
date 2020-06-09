@@ -5,16 +5,12 @@ import {
   StyleSheet,
   StatusBar,
   ScrollView,
-  Image,
   Modal,
   Alert
 } from 'react-native'
 import { 
   FAB,
-  TextInput,
   Button,
-  HelperText,
-  IconButton
 } from 'react-native-paper'
 import { Formik } from 'formik'
 import AsyncStorage from '@react-native-community/async-storage'
@@ -25,6 +21,7 @@ import api from '../../services/api'
 import Header from '../../components/header'
 import Vehicle from '../../components/vehicles'
 import InputGroup from '../../components/inputGroup'
+import EmptyContent from '../../components/emptyContent'
 
 const CarSchema = Yup.object().shape({
   plate: Yup.string()
@@ -53,15 +50,21 @@ export default function VehiclesScreen() {
 
       <Header title="Veículos" logout={logout} />
 
-      <ScrollView>
-        <View style={{ padding: 15, paddingBottom: 80 }}>
-        {
-          vehicles.map((obj, index) => (
-            <Vehicle plate={obj.plate} onDelete={() => confirmDeleteVehicle(obj)} key={index}/>
-          ))
-        }
-        </View>
-      </ScrollView>
+      {
+        vehicles.length == 0 ? (
+          <EmptyContent icon="car" title="Adicione um veículo!" subtitle="Voce não tem veículos cadastrados" />
+        ):(
+          <ScrollView>
+            <View style={{ padding: 15, paddingBottom: 80 }}>
+            {
+              vehicles.map((obj, index) => (
+                <Vehicle plate={obj.plate} onDelete={() => confirmDeleteVehicle(obj)} key={index}/>
+              ))
+            }
+            </View>
+          </ScrollView>
+        )
+      }
 
       <FAB
         style={styles.fab}
@@ -91,6 +94,7 @@ export default function VehiclesScreen() {
 
               <InputGroup
                 label="Placa"
+                value={values.plate}
                 maxLength={7}
                 autoCapitalize="characters"
                 mode="outlined"
